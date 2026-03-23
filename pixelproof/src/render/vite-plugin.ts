@@ -411,8 +411,19 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 .diff-pass { background:rgba(46,204,113,0.12); color:var(--green); }
 .diff-warn { background:rgba(245,166,35,0.12); color:var(--accent); }
 .diff-fail { background:rgba(231,76,60,0.12); color:var(--red); }
-.pane-body { flex:1; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:16px; position:relative; }
-.pane-body iframe { width:100%; height:100%; border:none; border-radius:8px; background:#fff; }
+.pane-body { flex:1; overflow:auto; position:relative; background:var(--bg); display:flex; align-items:center; justify-content:center; }
+.pane-body iframe { border:none; border-radius:4px; background:#fff; display:block; transform-origin:0 0; }
+.pane-body::-webkit-scrollbar { width:4px; height:4px; }
+.pane-body::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+/* Checkerboard background for transparency */
+.pane-body.checkerboard { background-image:linear-gradient(45deg,#1a1d25 25%,transparent 25%),linear-gradient(-45deg,#1a1d25 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1d25 75%),linear-gradient(-45deg,transparent 75%,#1a1d25 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+/* Zoom controls */
+.zoom-controls { display:flex; align-items:center; gap:2px; }
+.zoom-btn { background:var(--bg3); border:1px solid var(--border2); border-radius:3px; color:var(--muted2); font-size:11px; width:22px; height:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.1s; font-family:var(--font-mono); }
+.zoom-btn:hover { color:var(--text); border-color:var(--accent); }
+.zoom-label { font-size:9px; color:var(--muted2); min-width:32px; text-align:center; }
+.viewport-select { background:var(--bg3); border:1px solid var(--border2); border-radius:3px; color:var(--muted2); font-size:9px; padding:2px 4px; font-family:var(--font-mono); cursor:pointer; margin-left:4px; }
+.viewport-select:hover { border-color:var(--accent); color:var(--text); }
 .pane-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--muted); font-size:11px; text-align:center; }
 .pane-empty .big { font-size:28px; margin-bottom:4px; opacity:0.4; }
 
@@ -542,9 +553,17 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
         <div class="compare-pane">
           <div class="pane-header">
             <div class="pane-label"><div class="dot figma-dot"></div> Figma Design</div>
-            <span class="diff-badge diff-pass" id="figma-badge">BASELINE</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomPane('figma',-1)" title="Zoom out">-</button>
+                <span class="zoom-label" id="figma-zoom-label">100%</span>
+                <button class="zoom-btn" onclick="zoomPane('figma',1)" title="Zoom in">+</button>
+                <button class="zoom-btn" onclick="zoomPane('figma',0)" title="Reset" style="font-size:9px;width:28px">FIT</button>
+              </div>
+              <span class="diff-badge diff-pass" id="figma-badge">BASELINE</span>
+            </div>
           </div>
-          <div class="pane-body" id="figma-pane">
+          <div class="pane-body checkerboard" id="figma-pane">
             <div class="pane-empty">
               <div class="big">&#127912;</div>
               <div>No Figma screenshot available</div>
@@ -556,9 +575,25 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
         <div class="compare-pane">
           <div class="pane-header">
             <div class="pane-label"><div class="dot live-dot2"></div> Live Render</div>
-            <span class="diff-badge" id="diff-badge" style="display:none"></span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomPane('live',-1)" title="Zoom out">-</button>
+                <span class="zoom-label" id="live-zoom-label">100%</span>
+                <button class="zoom-btn" onclick="zoomPane('live',1)" title="Zoom in">+</button>
+                <button class="zoom-btn" onclick="zoomPane('live',0)" title="Reset" style="font-size:9px;width:28px">FIT</button>
+              </div>
+              <select class="viewport-select" id="viewport-select" onchange="changeViewport(this.value)" title="Viewport size">
+                <option value="360x640">Mobile 360</option>
+                <option value="375x812">iPhone 375</option>
+                <option value="768x1024">Tablet 768</option>
+                <option value="1024x768">Desktop 1024</option>
+                <option value="1280x800" selected>Desktop 1280</option>
+                <option value="1440x900">Desktop 1440</option>
+              </select>
+              <span class="diff-badge" id="diff-badge" style="display:none"></span>
+            </div>
           </div>
-          <div class="pane-body" id="live-pane">
+          <div class="pane-body checkerboard" id="live-pane">
             <div class="scan-line" id="scan-line"></div>
             <div class="pane-empty" id="live-empty">
               <div class="big">&#9654;</div>
@@ -677,26 +712,32 @@ function selectComponent(file) {
 }
 
 // ---- LIVE RENDER PANE ----
+// ---- ZOOM STATE ----
+var zoomLevels = { figma: 100, live: 100 };
+var viewport = { w: 1280, h: 800 };
+
 function renderLivePane(comp) {
   var pane = document.getElementById('live-pane');
   var badge = document.getElementById('diff-badge');
-  var scanLine = document.getElementById('scan-line');
-
-  // Show scan animation briefly
-  scanLine.style.display = 'block';
-  setTimeout(function() { scanLine.style.display = 'none'; }, 2000);
 
   if (!comp) {
-    pane.innerHTML = '<div class="pane-empty"><div class="big">&#9654;</div><div>Select a component to preview</div></div>';
+    pane.innerHTML = '<div class="scan-line" id="scan-line" style="display:none"></div>' +
+      '<div class="pane-empty"><div class="big">&#9654;</div><div>Select a component to preview</div></div>';
     badge.style.display = 'none';
     return;
   }
 
-  // Use the harness iframe to render the component live
+  // Use the harness iframe at fixed viewport dimensions
   var exportN = (comp.exports && comp.exports.length > 0) ? comp.exports[0] : 'default';
   var harnessUrl = '/harness?component=' + encodeURIComponent(comp.file) + '&export=' + encodeURIComponent(exportN);
-  pane.innerHTML = '<div class="scan-line" id="scan-line" style="display:none"></div>' +
-    '<iframe src="' + harnessUrl + '" title="Live render of ' + escapeHtml(exportName(comp)) + '"></iframe>';
+  var scale = zoomLevels.live / 100;
+  pane.innerHTML = '<div class="scan-line" id="scan-line"></div>' +
+    '<iframe id="live-iframe" src="' + harnessUrl + '" title="Live render of ' + escapeHtml(exportName(comp)) + '"' +
+    ' style="width:' + viewport.w + 'px;height:' + viewport.h + 'px;transform:scale(' + scale + ');transform-origin:0 0;flex-shrink:0;"></iframe>';
+
+  // Show scan briefly
+  var sl = document.getElementById('scan-line');
+  if (sl) { sl.style.display = 'block'; setTimeout(function() { sl.style.display = 'none'; }, 2000); }
 
   // Update diff badge
   var vCount = comp.violations.length;
@@ -710,6 +751,104 @@ function renderLivePane(comp) {
     badge.className = 'diff-badge ' + (vCount > 3 ? 'diff-fail' : 'diff-warn');
   }
 }
+
+// ---- ZOOM CONTROLS ----
+var MIN_ZOOM = 10, MAX_ZOOM = 400;
+
+function setZoom(paneId, level) {
+  zoomLevels[paneId] = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.round(level)));
+  document.getElementById(paneId + '-zoom-label').textContent = zoomLevels[paneId] + '%';
+  applyZoom(paneId);
+}
+
+function zoomPane(paneId, dir) {
+  if (dir === 0) {
+    // Fit: scale so content fits in pane width
+    var paneEl = document.getElementById(paneId === 'figma' ? 'figma-pane' : 'live-pane');
+    var fitScale = Math.min(paneEl.clientWidth / viewport.w, paneEl.clientHeight / viewport.h) * 100;
+    setZoom(paneId, fitScale);
+  } else {
+    // Step through discrete levels for button clicks
+    var steps = [10, 25, 50, 75, 100, 125, 150, 200, 300, 400];
+    var cur = zoomLevels[paneId];
+    var idx = steps.reduce(function(best,v,i) { return Math.abs(v-cur) < Math.abs(steps[best]-cur) ? i : best; }, 0);
+    var next = Math.max(0, Math.min(steps.length-1, idx + dir));
+    setZoom(paneId, steps[next]);
+  }
+}
+
+function applyZoom(paneId) {
+  var scale = zoomLevels[paneId] / 100;
+  if (paneId === 'live') {
+    var iframe = document.getElementById('live-iframe');
+    if (iframe) {
+      iframe.style.transform = 'scale(' + scale + ')';
+      iframe.style.width = viewport.w + 'px';
+      iframe.style.height = viewport.h + 'px';
+    }
+  }
+  var img = document.querySelector('#figma-pane img');
+  if (img && paneId === 'figma') {
+    img.style.transform = 'scale(' + scale + ')';
+    img.style.transformOrigin = '0 0';
+  }
+}
+
+function changeViewport(val) {
+  var parts = val.split('x');
+  viewport.w = parseInt(parts[0]);
+  viewport.h = parseInt(parts[1]);
+  if (selectedFile) {
+    var comp = components.find(function(c) { return c.file === selectedFile; });
+    if (comp) renderLivePane(comp);
+  }
+}
+
+// ---- PINCH & CTRL+WHEEL ZOOM ----
+function identifyPane(el) {
+  while (el) {
+    if (el.id === 'figma-pane') return 'figma';
+    if (el.id === 'live-pane') return 'live';
+    el = el.parentElement;
+  }
+  return null;
+}
+
+// Ctrl+Wheel or trackpad pinch (which fires wheel with ctrlKey=true)
+document.addEventListener('wheel', function(e) {
+  var paneId = identifyPane(e.target);
+  if (!paneId) return;
+  if (!e.ctrlKey && !e.metaKey) return; // Only zoom on Ctrl/Cmd+wheel or pinch
+  e.preventDefault();
+  var delta = -e.deltaY;
+  var factor = 1 + delta * 0.01; // Smooth continuous zoom
+  setZoom(paneId, zoomLevels[paneId] * factor);
+}, { passive: false });
+
+// Touch pinch gesture
+var pinchState = {};
+document.addEventListener('touchstart', function(e) {
+  if (e.touches.length === 2) {
+    var paneId = identifyPane(e.target);
+    if (!paneId) return;
+    var dx = e.touches[0].clientX - e.touches[1].clientX;
+    var dy = e.touches[0].clientY - e.touches[1].clientY;
+    pinchState = { paneId: paneId, startDist: Math.hypot(dx, dy), startZoom: zoomLevels[paneId] };
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', function(e) {
+  if (e.touches.length === 2 && pinchState.paneId) {
+    e.preventDefault();
+    var dx = e.touches[0].clientX - e.touches[1].clientX;
+    var dy = e.touches[0].clientY - e.touches[1].clientY;
+    var dist = Math.hypot(dx, dy);
+    var ratio = dist / pinchState.startDist;
+    setZoom(pinchState.paneId, pinchState.startZoom * ratio);
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', function() { pinchState = {}; }, { passive: true });
 
 // ---- FIGMA PANE (placeholder for now, shows screenshot if available) ----
 function renderFigmaPane(comp) {
