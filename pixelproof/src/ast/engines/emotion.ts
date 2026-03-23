@@ -23,7 +23,11 @@ import {
 } from '../matchers.js';
 import { parseCSSAndCheck } from './styled-components.js';
 
-const traverse = (typeof _traverse === 'function' ? _traverse : (_traverse as unknown as { default: typeof _traverse }).default) as typeof _traverse;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const traverse: (ast: t.Node, opts: import('@babel/traverse').TraverseOptions) => void =
+  typeof (_traverse as any).default === 'function'
+    ? (_traverse as any).default
+    : _traverse as any;
 
 export interface EngineResult {
   violations: Violation[];

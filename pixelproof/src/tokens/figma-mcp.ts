@@ -63,11 +63,11 @@ export async function fetchViaFigmaMCP(
   fileId: string,
 ): Promise<RawFigmaVariables | null> {
   try {
-    // Dynamic import — MCP SDK is optional
-    // @ts-expect-error MCP SDK is an optional peer dependency
+    // Dynamic import — MCP SDK is optional peer dependency
+    // @ts-expect-error MCP SDK is an optional peer dependency, types may not be installed
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-    // @ts-expect-error MCP SDK is an optional peer dependency
     const { StdioClientTransport } = await import(
+      // @ts-expect-error MCP SDK is an optional peer dependency, types may not be installed
       '@modelcontextprotocol/sdk/client/stdio.js'
     );
 
