@@ -4,6 +4,8 @@ import type { ProviderConfig } from './provider-detector.js';
 
 const VIRTUAL_MODULE_ID = 'virtual:pixelproof-harness';
 const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID;
+const DASHBOARD_VIRTUAL_ID = 'virtual:pixelproof-dashboard';
+const RESOLVED_DASHBOARD_ID = '\0' + DASHBOARD_VIRTUAL_ID;
 
 export interface PixelProofPluginOptions {
   config: PixelProofConfig;
@@ -252,7 +254,7 @@ export function pixelproofPlugin(options: PixelProofPluginOptions): Plugin {
         const url = req.url || '';
         if (url === '/' || url === '/index.html') {
           res.setHeader('Content-Type', 'text/html');
-          res.end(generateHarnessHTML());
+          res.end(generateDashboardHTML());
           return;
         }
         if (url.startsWith('/harness')) {
@@ -268,11 +270,17 @@ export function pixelproofPlugin(options: PixelProofPluginOptions): Plugin {
       if (id === VIRTUAL_MODULE_ID) {
         return RESOLVED_VIRTUAL_MODULE_ID;
       }
+      if (id === DASHBOARD_VIRTUAL_ID) {
+        return RESOLVED_DASHBOARD_ID;
+      }
     },
 
     load(id) {
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
         return generateHarnessEntry(options);
+      }
+      if (id === RESOLVED_DASHBOARD_ID) {
+        return generateDashboardEntry();
       }
     },
   };
@@ -298,4 +306,34 @@ function generateHarnessHTML(): string {
   <script type="module" src="virtual:pixelproof-harness"></script>
 </body>
 </html>`;
+}
+
+/**
+ * Generate the dashboard HTML page.
+ */
+export function generateDashboardHTML(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixelProof Dashboard</title>
+</head>
+<body>
+  <div id="pixelproof-dashboard"></div>
+  <script type="module" src="virtual:pixelproof-dashboard"></script>
+</body>
+</html>`;
+}
+
+/**
+ * Generate the dashboard entry module code.
+ * Dynamically imports the real dashboard entry from the package directory.
+ */
+export function generateDashboardEntry(): string {
+  // Use import.meta.url to resolve the dashboard source relative to this file
+  const dashboardPath = new URL('../dashboard/main.tsx', import.meta.url).pathname;
+  // Normalize Windows paths for Vite
+  const normalized = dashboardPath.replace(/^\/([A-Z]:)/, '$1');
+  return `import '${normalized}';`;
 }

@@ -12,7 +12,8 @@
       "Bash(find /d/Projects/design-dev-automator/_bmad-output -type f -iname *02* -o -iname *2*)",
       "Bash(grep -r \"Epic 2\\\\|E2\\\\|epic-02\\\\|epic-2\" /d/Projects/design-dev-automator/_bmad-output --include=*.md)",
       "Bash(find /d/Projects/design-dev-automator/_bmad-output/implementation-artifacts -type f -exec basename {})",
-      "Bash(node -e \"import\\(''pixelmatch''\\).then\\(m => console.log\\(''pixelmatch keys:'', Object.keys\\(m\\)\\)\\)\")"
+      "Bash(node -e \"import\\(''pixelmatch''\\).then\\(m => console.log\\(''pixelmatch keys:'', Object.keys\\(m\\)\\)\\)\")",
+      "Bash(find d:/Projects/design-dev-automator -type f \\\\\\(-name README* -o -name roadmap* -o -name plan* -o -name *PRD* \\\\\\) ! -path */node_modules/* ! -path */.git/*)"
     ]
   }
 }

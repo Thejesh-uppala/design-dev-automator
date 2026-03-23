@@ -7,6 +7,7 @@ import { fetchTokens } from '../tokens/fetcher.js';
 import { ScoreStore } from '../scoring/store.js';
 import { scanAll, scanFile } from '../ast/scanner.js';
 import { FileWatcher } from '../watcher/index.js';
+import { startServer } from '../server/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -72,7 +73,15 @@ program
         }
       }
 
-      // 4. Start file watcher
+      // 4. Launch Vite dev server + dashboard + WebSocket
+      const server = await startServer({
+        rootDir,
+        config,
+        scoreStore,
+        tokenMap,
+      });
+
+      // 5. Start file watcher for live re-scanning
       const watcher = new FileWatcher(rootDir, config.scan);
       watcher.onChange((event) => {
         if (event.event === 'unlink') return;
@@ -89,16 +98,17 @@ program
         const changeStr = change >= 0 ? `+${change.toFixed(1)}` : change.toFixed(1);
 
         console.log(
-          `Rescanned ${event.file}. Token Compliance: ${newCompliance}% (${changeStr} change). ${result.violations.length} violations.`,
+          `Rescanned ${event.file}. TC: ${newCompliance}% (${changeStr}). ${result.violations.length} violations.`,
         );
       });
 
       await watcher.start();
-      console.log('Watching for changes... (Ctrl+C to exit)');
+      console.log('Watching for changes... (Ctrl+C to exit)\n');
 
       // Clean exit on SIGINT
       process.on('SIGINT', async () => {
         await watcher.stop();
+        await server.close();
         process.exit(0);
       });
     } catch (error) {

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   generateHarnessEntry,
+  generateDashboardHTML,
+  generateDashboardEntry,
   pixelproofPlugin,
   type PixelProofPluginOptions,
 } from '../vite-plugin.js';
@@ -232,5 +234,36 @@ describe('pixelproofPlugin', () => {
   it('has configureServer hook', () => {
     const plugin = pixelproofPlugin(makeOptions());
     expect(plugin.configureServer).toBeInstanceOf(Function);
+  });
+
+  it('resolves dashboard virtual module ID', () => {
+    const plugin = pixelproofPlugin(makeOptions());
+    const resolveId = plugin.resolveId as (id: string) => string | undefined;
+    expect(resolveId('virtual:pixelproof-dashboard')).toBe(
+      '\0virtual:pixelproof-dashboard',
+    );
+  });
+
+  it('loads dashboard virtual module content', () => {
+    const plugin = pixelproofPlugin(makeOptions());
+    const load = plugin.load as (id: string) => string | undefined;
+    const code = load('\0virtual:pixelproof-dashboard');
+    expect(code).toContain('dashboard/main.tsx');
+  });
+});
+
+describe('Dashboard HTML Generation', () => {
+  it('generates valid dashboard HTML', () => {
+    const html = generateDashboardHTML();
+    expect(html).toContain('<!DOCTYPE html>');
+    expect(html).toContain('pixelproof-dashboard');
+    expect(html).toContain('virtual:pixelproof-dashboard');
+    expect(html).toContain('PixelProof Dashboard');
+  });
+
+  it('generates dashboard entry with import path', () => {
+    const entry = generateDashboardEntry();
+    expect(entry).toContain('import');
+    expect(entry).toContain('main.tsx');
   });
 });
