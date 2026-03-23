@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(node bin/pixelproof.js --version)",
+      "Bash(node bin/pixelproof.js start)",
+      "Bash(npx vitest:*)",
+      "Bash(node bin/pixelproof.js badcommand)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(node -e \"const p=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''package.json'',''utf8''\\)\\); console.log\\(''engines:'', JSON.stringify\\(p.engines\\)\\)\")",
+      "Bash(find /d/Projects/design-dev-automator/_bmad-output -type f -name *epic*02* -o -name *epic-2* -o -name *E2*)",
+      "Bash(find /d/Projects/design-dev-automator/_bmad-output -type f -iname *02* -o -iname *2*)",
+      "Bash(grep -r \"Epic 2\\\\|E2\\\\|epic-02\\\\|epic-2\" /d/Projects/design-dev-automator/_bmad-output --include=*.md)",
+      "Bash(find /d/Projects/design-dev-automator/_bmad-output/implementation-artifacts -type f -exec basename {})",
+      "Bash(node -e \"import\\(''pixelmatch''\\).then\\(m => console.log\\(''pixelmatch keys:'', Object.keys\\(m\\)\\)\\)\")"
+    ]
+  }
+}

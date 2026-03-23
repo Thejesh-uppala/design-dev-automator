@@ -1,0 +1,59 @@
+{
+  "name": "pixelproof",
+  "version": "0.1.0",
+  "description": "Catch token violations before code review. Figma-connected. No Storybook required.",
+  "type": "module",
+  "bin": {
+    "pixelproof": "./bin/pixelproof.js"
+  },
+  "main": "./dist/cli/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "design-tokens",
+    "figma",
+    "react",
+    "design-system",
+    "lint"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@babel/parser": "^7.29.2",
+    "@babel/traverse": "^7.29.0",
+    "@babel/types": "^7.29.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "chokidar": "^5.0.0",
+    "commander": "^14.0.3",
+    "fast-glob": "^3.3.3",
+    "js-yaml": "^4.1.1",
+    "pixelmatch": "^7.1.0",
+    "playwright-core": "^1.58.2",
+    "pngjs": "^7.0.0",
+    "postcss": "^8.5.8",
+    "postcss-scss": "^4.0.9",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "vite": "^8.0.1",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/babel__traverse": "^7.28.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.5.0",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/ws": "^8.18.1",
+    "happy-dom": "^20.8.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}
