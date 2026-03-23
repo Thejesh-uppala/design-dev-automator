@@ -96,7 +96,7 @@ describe('ScoreWebSocketServer', () => {
       scoreStore: store,
     });
 
-    const client = createBufferedClient(`ws://localhost:${port}/ws`);
+    const client = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
     const msg = (await client.waitForMessage(byType('initial-state'))) as Record<string, unknown>;
 
     expect(msg.type).toBe('initial-state');
@@ -116,7 +116,7 @@ describe('ScoreWebSocketServer', () => {
       scoreStore: store,
     });
 
-    const client = createBufferedClient(`ws://localhost:${port}/ws`);
+    const client = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
     // Wait for initial-state first
     await client.waitForMessage(byType('initial-state'));
 
@@ -138,7 +138,7 @@ describe('ScoreWebSocketServer', () => {
       scoreStore: store,
     });
 
-    const client = createBufferedClient(`ws://localhost:${port}/ws`);
+    const client = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
     await client.waitForMessage(byType('initial-state'));
 
     store.setRenderFidelity('src/Button.tsx', 90, 'rendered');
@@ -162,7 +162,7 @@ describe('ScoreWebSocketServer', () => {
       renderCallback,
     });
 
-    const client = createBufferedClient(`ws://localhost:${port}/ws`);
+    const client = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
     await client.waitForOpen();
     await client.waitForMessage(byType('initial-state'));
 
@@ -188,7 +188,7 @@ describe('ScoreWebSocketServer', () => {
       scoreStore: store,
     });
 
-    const client = createBufferedClient(`ws://localhost:${port}/ws`);
+    const client = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
     await client.waitForOpen();
     await client.waitForMessage(byType('initial-state'));
 
@@ -213,7 +213,7 @@ describe('ScoreWebSocketServer', () => {
       scoreStore: store,
     });
 
-    const client = createBufferedClient(`ws://localhost:${port}/ws`);
+    const client = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
     await client.waitForOpen();
     await client.waitForMessage(byType('initial-state'));
 
@@ -236,8 +236,8 @@ describe('ScoreWebSocketServer', () => {
       scoreStore: store,
     });
 
-    const client1 = createBufferedClient(`ws://localhost:${port}/ws`);
-    const client2 = createBufferedClient(`ws://localhost:${port}/ws`);
+    const client1 = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
+    const client2 = createBufferedClient(`ws://localhost:${port}/__pixelproof_ws`);
 
     await client1.waitForMessage(byType('initial-state'));
     await client2.waitForMessage(byType('initial-state'));

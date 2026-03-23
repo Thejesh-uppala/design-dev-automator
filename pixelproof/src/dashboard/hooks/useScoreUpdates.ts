@@ -28,7 +28,7 @@ export function useScoreUpdates(): ScoreUpdatesResult {
 
   const connect = useCallback(() => {
     const port = window.location.port || '3001';
-    const ws = new WebSocket(`ws://localhost:${port}/ws`);
+    const ws = new WebSocket(`ws://localhost:${port}/__pixelproof_ws`);
     wsRef.current = ws;
 
     ws.onopen = () => {

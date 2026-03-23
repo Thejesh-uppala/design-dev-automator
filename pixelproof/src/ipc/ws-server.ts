@@ -18,12 +18,23 @@ export interface WsServerOptions {
 export class ScoreWebSocketServer {
   private wss: WebSocketServer;
   private unsubscribe: (() => void) | null = null;
+  private upgradeHandler: ((req: import('node:http').IncomingMessage, socket: import('node:stream').Duplex, head: Buffer) => void) | null = null;
 
   constructor(private options: WsServerOptions) {
-    this.wss = new WebSocketServer({
-      server: options.server,
-      path: '/ws',
-    });
+    // Use noServer mode to avoid conflicting with Vite's HMR WebSocket
+    this.wss = new WebSocketServer({ noServer: true });
+
+    // Manually handle upgrade requests only for our path
+    this.upgradeHandler = (req, socket, head) => {
+      const url = new URL(req.url || '', 'http://localhost');
+      if (url.pathname === '/__pixelproof_ws') {
+        this.wss.handleUpgrade(req, socket, head, (ws) => {
+          this.wss.emit('connection', ws, req);
+        });
+      }
+      // Don't call socket.destroy() — let other handlers (Vite HMR) process it
+    };
+    options.server.on('upgrade', this.upgradeHandler);
 
     this.wss.on('connection', (ws) => {
       // Send initial state
@@ -107,6 +118,10 @@ export class ScoreWebSocketServer {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
+    }
+    if (this.upgradeHandler) {
+      this.options.server.removeListener('upgrade', this.upgradeHandler);
+      this.upgradeHandler = null;
     }
     this.wss.close();
   }

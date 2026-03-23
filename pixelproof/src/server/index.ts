@@ -7,7 +7,6 @@
  */
 
 import { createServer as createViteServer } from 'vite';
-import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import type { Server as HttpServer } from 'node:http';
 import type { PixelProofConfig } from '../config/schema.js';
@@ -35,6 +34,8 @@ export async function startServer(options: ServerOptions) {
   const providers = detectProviders(rootDir);
 
   // Create Vite dev server
+  // We rely on the user's vite.config (auto-discovered from rootDir) for
+  // framework plugins like @vitejs/plugin-react. We only add our own plugin.
   const vite = await createViteServer({
     root: rootDir,
     server: {
@@ -43,14 +44,11 @@ export async function startServer(options: ServerOptions) {
       open: false,
     },
     plugins: [
-      react(),
       pixelproofPlugin({ config, providers }),
     ],
     optimizeDeps: {
-      // Don't pre-bundle the user's source files
-      exclude: ['virtual:pixelproof-harness', 'virtual:pixelproof-dashboard'],
+      exclude: ['virtual:pixelproof-harness'],
     },
-    // Suppress Vite's own logging — we print our own messages
     logLevel: 'warn',
   });
 

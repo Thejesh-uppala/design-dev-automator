@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   generateHarnessEntry,
   generateDashboardHTML,
-  generateDashboardEntry,
   pixelproofPlugin,
   type PixelProofPluginOptions,
 } from '../vite-plugin.js';
@@ -236,34 +235,25 @@ describe('pixelproofPlugin', () => {
     expect(plugin.configureServer).toBeInstanceOf(Function);
   });
 
-  it('resolves dashboard virtual module ID', () => {
+  it('does not resolve dashboard virtual module (self-contained HTML)', () => {
     const plugin = pixelproofPlugin(makeOptions());
     const resolveId = plugin.resolveId as (id: string) => string | undefined;
-    expect(resolveId('virtual:pixelproof-dashboard')).toBe(
-      '\0virtual:pixelproof-dashboard',
-    );
-  });
-
-  it('loads dashboard virtual module content', () => {
-    const plugin = pixelproofPlugin(makeOptions());
-    const load = plugin.load as (id: string) => string | undefined;
-    const code = load('\0virtual:pixelproof-dashboard');
-    expect(code).toContain('dashboard/main.tsx');
+    expect(resolveId('virtual:pixelproof-dashboard')).toBeUndefined();
   });
 });
 
 describe('Dashboard HTML Generation', () => {
-  it('generates valid dashboard HTML', () => {
+  it('generates self-contained dashboard HTML with WebSocket client', () => {
     const html = generateDashboardHTML();
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('pixelproof-dashboard');
-    expect(html).toContain('virtual:pixelproof-dashboard');
     expect(html).toContain('PixelProof Dashboard');
+    expect(html).toContain('__pixelproof_ws');
+    expect(html).toContain('score-display');
+    expect(html).toContain('component-list');
   });
 
-  it('generates dashboard entry with import path', () => {
-    const entry = generateDashboardEntry();
-    expect(entry).toContain('import');
-    expect(entry).toContain('main.tsx');
+  it('does not reference virtual modules', () => {
+    const html = generateDashboardHTML();
+    expect(html).not.toContain('virtual:pixelproof-dashboard');
   });
 });

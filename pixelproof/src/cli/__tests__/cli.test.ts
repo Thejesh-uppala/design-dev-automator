@@ -12,17 +12,16 @@ function runCli(
   timeoutMs = 5000,
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return new Promise((resolve) => {
-    const proc = execFile('node', [CLI_PATH, ...args], (error, stdout, stderr) => {
+    const proc = execFile('node', [CLI_PATH, ...args], {
+      timeout: timeoutMs,
+      killSignal: 'SIGKILL',
+    }, (error, stdout, stderr) => {
       resolve({
         stdout: stdout.toString(),
         stderr: stderr.toString(),
         exitCode: error ? (error as any).code ?? 1 : 0,
       });
     });
-    // Kill long-running commands (start, install) after timeout
-    setTimeout(() => {
-      proc.kill('SIGTERM');
-    }, timeoutMs);
   });
 }
 
@@ -60,12 +59,11 @@ describe('pixelproof CLI', () => {
   });
 
   it('install command attempts chromium install', async () => {
-    // install tries to run playwright install chromium — kill quickly
-    const { stdout, stderr } = await runCli(['install'], 2000);
-    // Either starts with output or fails with error about playwright
-    // The process may be killed before producing output, so just verify no crash
+    // install runs `npx playwright install chromium` which can be slow
+    // Kill it after 3s and verify it at least started without crashing
+    const { stdout, stderr } = await runCli(['install'], 3000);
     expect(typeof stdout).toBe('string');
-  }, 15000);
+  }, 30000);
 
   it('unknown command prints error and exits non-zero', async () => {
     const { stderr, exitCode } = await runCli(['badcommand']);

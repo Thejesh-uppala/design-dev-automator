@@ -128,7 +128,7 @@ export function scanAll(
   scoreStore: ScoreStore,
 ): number {
   const allowedExtensions = new Set(
-    scanConfig.fileTypes.map((t) => `.${t}`),
+    scanConfig.fileTypes.map((t) => t.startsWith('.') ? t : `.${t}`),
   );
 
   const files = fg.sync(scanConfig.include, {

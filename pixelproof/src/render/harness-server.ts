@@ -61,17 +61,30 @@ export async function startHarnessServer(
     ...pluginOptions,
   };
 
-  // Load React plugin + PixelProof plugin
+  // Load PixelProof plugin; only add react() if no user vite config
+  // (user config typically already includes @vitejs/plugin-react)
   const plugins: unknown[] = [pixelproofPlugin(fullPluginOptions)];
-  try {
-    const reactPlugin = await import('@vitejs/plugin-react');
-    const react =
-      typeof reactPlugin.default === 'function'
-        ? reactPlugin.default
-        : (reactPlugin as unknown as { default: typeof reactPlugin.default }).default;
-    plugins.unshift((react as Function)());
-  } catch {
-    // @vitejs/plugin-react not available — user project may provide it
+
+  const hasUserConfig = [
+    'vite.config.ts',
+    'vite.config.js',
+    'vite.config.mts',
+    'vite.config.mjs',
+  ]
+    .map((f) => resolve(rootDir, f))
+    .some((f) => existsSync(f));
+
+  if (!hasUserConfig) {
+    try {
+      const reactPlugin = await import('@vitejs/plugin-react');
+      const react =
+        typeof reactPlugin.default === 'function'
+          ? reactPlugin.default
+          : (reactPlugin as unknown as { default: typeof reactPlugin.default }).default;
+      plugins.unshift((react as Function)());
+    } catch {
+      // @vitejs/plugin-react not available — user project may provide it
+    }
   }
 
   const inlineConfig = buildHarnessConfig(config, rootDir, plugins);

@@ -22,7 +22,7 @@ Create `.pixelproofrc.json` in your project root:
   "scan": {
     "include": ["src/components/**"],
     "exclude": ["**/*.test.*", "**/*.spec.*"],
-    "fileTypes": [".tsx", ".jsx"]
+    "fileTypes": ["tsx", "jsx"]
   },
   "tokens": {
     "format": "dtcg",
