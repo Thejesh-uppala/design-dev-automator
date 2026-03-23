@@ -9,6 +9,8 @@
  */
 
 import type { Node } from '@babel/types';
+import type { NodePath } from '@babel/traverse';
+import * as t from '@babel/types';
 import _traverse from '@babel/traverse';
 import type { TokenMap } from '../../tokens/types.js';
 import type { Violation, ViolationSource } from '../../scoring/types.js';
@@ -52,7 +54,7 @@ export function scanVanillaExtract(
   let totalProperties = 0;
 
   traverse(ast, {
-    CallExpression(path) {
+    CallExpression(path: NodePath<t.CallExpression>) {
       const calleeName = getCalleeName(path.node.callee);
       if (!calleeName || !VE_FUNCTIONS.has(calleeName)) return;
 

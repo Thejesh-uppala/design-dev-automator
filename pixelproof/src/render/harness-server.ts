@@ -39,7 +39,7 @@ export function buildHarnessConfig(
       strictPort: true,
       host: 'localhost',
     },
-    plugins: userConfigFile ? plugins : plugins,
+    plugins: (userConfigFile ? plugins : plugins) as import('vite').PluginOption[],
     logLevel: 'silent',
   };
 }
@@ -68,8 +68,8 @@ export async function startHarnessServer(
     const react =
       typeof reactPlugin.default === 'function'
         ? reactPlugin.default
-        : reactPlugin;
-    plugins.unshift(react());
+        : (reactPlugin as unknown as { default: typeof reactPlugin.default }).default;
+    plugins.unshift((react as Function)());
   } catch {
     // @vitejs/plugin-react not available — user project may provide it
   }

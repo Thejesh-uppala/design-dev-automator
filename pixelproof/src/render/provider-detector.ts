@@ -184,7 +184,7 @@ export function detectProvidersFromSource(
 
       // Calculate nesting depth
       let depth = 0;
-      let parent = path.parentPath;
+      let parent: NodePath | null = path.parentPath;
       while (parent) {
         if (parent.isJSXElement()) depth++;
         parent = parent.parentPath;

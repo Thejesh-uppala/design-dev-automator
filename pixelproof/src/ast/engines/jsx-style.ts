@@ -6,6 +6,8 @@
  */
 
 import type { Node } from '@babel/types';
+import type { NodePath } from '@babel/traverse';
+import * as t from '@babel/types';
 import _traverse from '@babel/traverse';
 import type { TokenMap } from '../../tokens/types.js';
 import type { Violation, ViolationSource } from '../../scoring/types.js';
@@ -39,7 +41,7 @@ export function scanJSXStyles(
   let totalProperties = 0;
 
   traverse(ast, {
-    JSXAttribute(path) {
+    JSXAttribute(path: NodePath<t.JSXAttribute>) {
       const name = path.node.name;
       if (!('name' in name) || name.name !== 'style') return;
 

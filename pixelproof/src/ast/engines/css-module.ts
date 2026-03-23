@@ -5,7 +5,6 @@
  */
 
 import postcss from 'postcss';
-// @ts-expect-error postcss-scss types
 import postcssScss from 'postcss-scss';
 import type { TokenMap } from '../../tokens/types.js';
 import type { Violation, ViolationSource } from '../../scoring/types.js';

@@ -9,6 +9,8 @@
  */
 
 import type { Node } from '@babel/types';
+import type { NodePath } from '@babel/traverse';
+import * as t from '@babel/types';
 import _traverse from '@babel/traverse';
 import type { TokenMap } from '../../tokens/types.js';
 import type { Violation, ViolationSource } from '../../scoring/types.js';
@@ -44,7 +46,7 @@ export function scanEmotion(
 
   traverse(ast, {
     // css prop: <div css={{ color: '#6366f1' }} />
-    JSXAttribute(path) {
+    JSXAttribute(path: NodePath<t.JSXAttribute>) {
       const name = path.node.name;
       if (!('name' in name) || name.name !== 'css') return;
 
@@ -76,7 +78,7 @@ export function scanEmotion(
 
     // css() call: css({ color: '#6366f1' })
     // css`color: #6366f1;` tagged template
-    CallExpression(path) {
+    CallExpression(path: NodePath<t.CallExpression>) {
       const callee = path.node.callee;
 
       // css({ ... }) call

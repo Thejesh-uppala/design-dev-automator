@@ -8,9 +8,10 @@
  */
 
 import type { Node } from '@babel/types';
+import type { NodePath } from '@babel/traverse';
+import * as t from '@babel/types';
 import _traverse from '@babel/traverse';
 import postcss from 'postcss';
-// @ts-expect-error postcss-scss types
 import postcssScss from 'postcss-scss';
 import type { TokenMap } from '../../tokens/types.js';
 import type { Violation, ViolationSource } from '../../scoring/types.js';
@@ -86,7 +87,7 @@ export function scanStyledComponents(
   let totalProperties = 0;
 
   traverse(ast, {
-    TaggedTemplateExpression(path) {
+    TaggedTemplateExpression(path: NodePath<t.TaggedTemplateExpression>) {
       if (!isStyledTag(path.node.tag)) return;
 
       const css = extractCSS(path.node.quasi);
