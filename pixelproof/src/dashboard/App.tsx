@@ -9,18 +9,45 @@ import './index.css';
 
 function Header() {
   const { connected } = useScore();
+  const [theme, setTheme] = React.useState(() => {
+    return localStorage.getItem('pp-theme') || 'dark';
+  });
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('pp-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  };
+
   return React.createElement(
     'header',
     { className: 'pp-header' },
     React.createElement('span', { className: 'pp-header-brand' }, 'PixelProof'),
     React.createElement(
       'div',
-      { className: 'pp-header-status' },
-      React.createElement('span', {
-        className: `pp-status-dot${!connected ? ' pp-status-dot--disconnected' : ''}`,
-      }),
-      connected ? 'Connected' : 'Disconnected',
-    ),
+      { style: { display: 'flex', alignItems: 'center', gap: '16px' } },
+      React.createElement(
+        'button',
+        {
+          onClick: toggleTheme,
+          className: 'pp-btn',
+          title: `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`,
+          style: { padding: '4px', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }
+        },
+        theme === 'dark' ? '☀️' : '🌙'
+      ),
+      React.createElement(
+        'div',
+        { className: 'pp-header-status' },
+        React.createElement('span', {
+          className: `pp-status-dot${!connected ? ' pp-status-dot--disconnected' : ''}`,
+        }),
+        connected ? 'Connected' : 'Disconnected',
+      )
+    )
   );
 }
 

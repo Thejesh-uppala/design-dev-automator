@@ -333,18 +333,30 @@ const DASHBOARD_HTML = `<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0b0d; --bg1: #111318; --bg2: #181b22; --bg3: #1f232e;
-  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
-  --text: #e8eaf0; --muted: #5a6075; --muted2: #8890a8;
+  --bg: #09090b; --bg1: rgba(18, 18, 20, 0.85); --bg2: rgba(18, 18, 20, 0.6); --bg3: #1e1e24;
+  --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.15);
+  --text: #fafafa; --muted: #71717a; --muted2: #a1a1aa;
   --accent: #f5a623; --accent2: #ff6b35;
-  --green: #2ecc71; --red: #e74c3c; --blue: #4a9eff; --purple: #a855f7;
-  --font-head: 'Syne', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  --green: #4ade80; --red: #f87171; --blue: #60a5fa; --purple: #c084fc;
+  --font-head: 'Inter', 'Syne', sans-serif; --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --backdrop-blur: blur(12px);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
+[data-theme='light'] {
+  --bg: #f8fafc; --bg1: rgba(255, 255, 255, 0.85); --bg2: rgba(255, 255, 255, 0.6); --bg3: #e2e8f0;
+  --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.15);
+  --text: #0f172a; --muted: #94a3b8; --muted2: #475569;
+  --accent: #d97706; --accent2: #c2410c;
+  --green: #16a34a; --red: #dc2626; --blue: #2563eb; --purple: #9333ea;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
 body { background:var(--bg); color:var(--text); font-family:var(--font-mono); font-size:12px; height:100vh; overflow:hidden; display:flex; flex-direction:column; }
 
 /* TOP BAR */
-.topbar { display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:48px; border-bottom:1px solid var(--border); background:var(--bg1); flex-shrink:0; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; border-bottom:1px solid var(--border); background:var(--bg1); flex-shrink:0; backdrop-filter:var(--backdrop-blur); z-index:10; box-shadow:var(--shadow-sm); }
 .topbar-left { display:flex; align-items:center; gap:16px; }
 .logo { font-family:var(--font-head); font-size:16px; font-weight:800; letter-spacing:-0.5px; color:var(--text); }
 .logo span { color:var(--accent); }
@@ -358,10 +370,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 .stat-pill strong { color:var(--text); font-weight:600; }
 
 /* LAYOUT */
-.layout { display:grid; grid-template-columns:280px 1fr 320px; flex:1; overflow:hidden; }
+.layout { display:grid; grid-template-columns:280px 1fr 320px; flex:1; overflow:hidden; background: linear-gradient(180deg, var(--bg) 0%, var(--bg3) 100%); }
 
 /* SIDEBAR */
-.sidebar { background:var(--bg1); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sidebar { background:var(--bg1); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; backdrop-filter:var(--backdrop-blur); }
 .sidebar-header { padding:14px 16px 10px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
 .sidebar-title { font-family:var(--font-head); font-weight:700; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted2); }
 .count-badge { background:var(--bg3); border:1px solid var(--border2); border-radius:3px; padding:1px 6px; font-size:10px; color:var(--muted2); }
@@ -387,8 +399,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 .violation-count { font-size:9px; color:var(--red); background:rgba(231,76,60,0.08); padding:2px 5px; border-radius:3px; }
 
 /* MAIN PANEL */
-.main { display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
-.main-header { padding:16px 20px 12px; border-bottom:1px solid var(--border); background:var(--bg1); }
+.main { display:flex; flex-direction:column; overflow:hidden; }
+.main-header { padding:16px 20px 12px; border-bottom:1px solid var(--border); background:var(--bg1); backdrop-filter:var(--backdrop-blur); }
 .main-header-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
 .comp-full-file { font-size:10px; color:var(--muted); margin-bottom:4px; }
 .comp-full-name { font-family:var(--font-head); font-size:18px; font-weight:700; color:var(--text); line-height:1.2; }
@@ -416,7 +428,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 .pane-body::-webkit-scrollbar { width:4px; height:4px; }
 .pane-body::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
 /* Checkerboard background for transparency */
-.pane-body.checkerboard { background-image:linear-gradient(45deg,#1a1d25 25%,transparent 25%),linear-gradient(-45deg,#1a1d25 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1d25 75%),linear-gradient(-45deg,transparent 75%,#1a1d25 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+.pane-body.checkerboard { background-color:#fafafa; background-image:linear-gradient(45deg,#e5e5e5 25%,transparent 25%),linear-gradient(-45deg,#e5e5e5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e5e5 75%),linear-gradient(-45deg,transparent 75%,#e5e5e5 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
 /* Zoom controls */
 .zoom-controls { display:flex; align-items:center; gap:2px; }
 .zoom-btn { background:var(--bg3); border:1px solid var(--border2); border-radius:3px; color:var(--muted2); font-size:11px; width:22px; height:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.1s; font-family:var(--font-mono); }
@@ -424,6 +436,23 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 .zoom-label { font-size:9px; color:var(--muted2); min-width:32px; text-align:center; }
 .viewport-select { background:var(--bg3); border:1px solid var(--border2); border-radius:3px; color:var(--muted2); font-size:9px; padding:2px 4px; font-family:var(--font-mono); cursor:pointer; margin-left:4px; }
 .viewport-select:hover { border-color:var(--accent); color:var(--text); }
+/* Source toggle (Upload / MCP) */
+.source-toggle { display:flex; border:1px solid var(--border2); border-radius:3px; overflow:hidden; margin-right:4px; }
+.source-toggle-btn { background:var(--bg3); color:var(--muted2); font-size:9px; padding:2px 6px; border:none; cursor:pointer; font-family:var(--font-mono); transition:all 0.1s; }
+.source-toggle-btn:first-child { border-right:1px solid var(--border2); }
+.source-toggle-btn.active { background:var(--accent); color:var(--bg); }
+.source-toggle-btn:hover:not(.active) { color:var(--text); }
+/* Upload area */
+.upload-area { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; border:2px dashed var(--border2); border-radius:8px; padding:24px; margin:16px; transition:all 0.15s; color:var(--muted2); text-align:center; }
+.upload-area:hover { border-color:var(--accent); color:var(--text); background:rgba(245,166,35,0.03); }
+.upload-area .big { font-size:28px; opacity:0.4; }
+.upload-area input { display:none; }
+/* Live pane view toggle */
+.view-toggle { display:flex; border:1px solid var(--border2); border-radius:3px; overflow:hidden; }
+.view-toggle-btn { background:var(--bg3); color:var(--muted2); font-size:9px; padding:2px 6px; border:none; cursor:pointer; font-family:var(--font-mono); transition:all 0.1s; }
+.view-toggle-btn:not(:last-child) { border-right:1px solid var(--border2); }
+.view-toggle-btn.active { background:var(--blue); color:#fff; }
+.view-toggle-btn:hover:not(.active) { color:var(--text); }
 .pane-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--muted); font-size:11px; text-align:center; }
 .pane-empty .big { font-size:28px; margin-bottom:4px; opacity:0.4; }
 
@@ -467,7 +496,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 @keyframes slideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
 /* SCORE PANEL */
-.score-panel { background:var(--bg1); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.score-panel { background:var(--bg1); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; backdrop-filter:var(--backdrop-blur); box-shadow:var(--shadow-sm); }
 .score-header { padding:14px 16px; border-bottom:1px solid var(--border); background:var(--bg2); display:flex; align-items:center; justify-content:space-between; }
 .score-title { font-family:var(--font-head); font-weight:700; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted2); }
 .score-body { flex:1; overflow-y:auto; padding:16px; }
@@ -513,6 +542,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
     <div class="stat-pill">Rendered: <strong id="stat-rendered">0</strong></div>
     <div class="stat-pill">Violations: <strong id="stat-violations">0</strong></div>
     <div class="stat-pill">Avg compliance: <strong id="stat-compliance">-</strong></div>
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode" style="margin-left:12px;background:none;border:none;cursor:pointer;font-size:16px;opacity:0.8;transition:transform 0.2s, opacity 0.2s;">☀️</button>
   </div>
 </div>
 
@@ -554,6 +584,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
           <div class="pane-header">
             <div class="pane-label"><div class="dot figma-dot"></div> Figma Design</div>
             <div style="display:flex;align-items:center;gap:6px">
+              <div class="source-toggle" id="figma-source-toggle">
+                <button class="source-toggle-btn active" onclick="setFigmaSource('upload')">Upload</button>
+                <button class="source-toggle-btn" onclick="setFigmaSource('mcp')">MCP</button>
+              </div>
               <div class="zoom-controls">
                 <button class="zoom-btn" onclick="zoomPane('figma',-1)" title="Zoom out">-</button>
                 <span class="zoom-label" id="figma-zoom-label">100%</span>
@@ -564,10 +598,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
             </div>
           </div>
           <div class="pane-body checkerboard" id="figma-pane">
-            <div class="pane-empty">
-              <div class="big">&#127912;</div>
-              <div>No Figma screenshot available</div>
-              <div style="font-size:9px;color:var(--muted)">Configure Figma API tokens to fetch design baselines</div>
+            <div class="upload-area" id="figma-upload" onclick="document.getElementById('figma-file-input').click()">
+              <input type="file" id="figma-file-input" accept="image/*" onchange="handleFigmaUpload(this)">
+              <div class="big">&#128247;</div>
+              <div>Drop or click to upload Figma screenshot</div>
+              <div style="font-size:9px;color:var(--muted)">PNG, JPG — paste from clipboard with Ctrl+V</div>
             </div>
           </div>
         </div>
@@ -576,6 +611,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
           <div class="pane-header">
             <div class="pane-label"><div class="dot live-dot2"></div> Live Render</div>
             <div style="display:flex;align-items:center;gap:6px">
+              <div class="view-toggle" id="live-view-toggle">
+                <button class="view-toggle-btn active" onclick="setLiveView('live')" title="Live iframe">Live</button>
+                <button class="view-toggle-btn" onclick="setLiveView('screenshot')" title="Captured screenshot">Screenshot</button>
+                <button class="view-toggle-btn" onclick="setLiveView('diff')" title="Pixel diff">Diff</button>
+              </div>
               <div class="zoom-controls">
                 <button class="zoom-btn" onclick="zoomPane('live',-1)" title="Zoom out">-</button>
                 <span class="zoom-label" id="live-zoom-label">100%</span>
@@ -654,6 +694,21 @@ var aggregate = { tokenCompliance:0, renderFidelity:0, totalComponents:0, render
 var selectedFile = null;
 var ws = null;
 
+// ---- THEME LOGIC ----
+var savedTheme = localStorage.getItem('pixelproof-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('theme-toggle').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+function toggleTheme() {
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var nextTheme = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  localStorage.setItem('pixelproof-theme', nextTheme);
+  document.getElementById('theme-toggle').textContent = nextTheme === 'dark' ? '☀️' : '🌙';
+  var toggleBtn = document.getElementById('theme-toggle');
+  toggleBtn.style.transform = 'scale(0.8)';
+  setTimeout(function() { toggleBtn.style.transform = 'scale(1)'; }, 150);
+}
+
 function scoreColor(s) { return s >= 85 ? 'var(--green)' : s >= 65 ? 'var(--accent)' : 'var(--red)'; }
 function scoreClass(s) { return s >= 85 ? 'c-green' : s >= 65 ? 'c-amber' : 'c-red'; }
 function shortFile(f) {
@@ -706,6 +761,7 @@ function selectComponent(file) {
 
   renderSidebar();
   renderLivePane(comp);
+  renderFigmaPane();
   renderViolationsBar(comp);
   renderScorePanel(comp);
   addLog('[UI]', 'Selected ' + shortFile(comp.file), '');
@@ -727,13 +783,62 @@ function renderLivePane(comp) {
     return;
   }
 
-  // Use the harness iframe at fixed viewport dimensions
-  var exportN = (comp.exports && comp.exports.length > 0) ? comp.exports[0] : 'default';
-  var harnessUrl = '/harness?component=' + encodeURIComponent(comp.file) + '&export=' + encodeURIComponent(exportN);
   var scale = zoomLevels.live / 100;
-  pane.innerHTML = '<div class="scan-line" id="scan-line"></div>' +
-    '<iframe id="live-iframe" src="' + harnessUrl + '" title="Live render of ' + escapeHtml(exportName(comp)) + '"' +
-    ' style="width:' + viewport.w + 'px;height:' + viewport.h + 'px;transform:scale(' + scale + ');transform-origin:0 0;flex-shrink:0;"></iframe>';
+  var compName = deriveComponentName(comp.file);
+
+  if (liveView === 'screenshot') {
+    // Show captured Playwright screenshot
+    var img = new Image();
+    img.onload = function() {
+      var imgW = img.naturalWidth, imgH = img.naturalHeight;
+      var sW = Math.round(imgW * scale), sH = Math.round(imgH * scale);
+      pane.innerHTML = '<div class="scan-line" id="scan-line"></div>' +
+        '<div id="live-wrapper" style="width:' + sW + 'px;height:' + sH + 'px;overflow:hidden;flex-shrink:0;"></div>';
+      img.id = 'live-screenshot';
+      img.style.transform = 'scale(' + scale + ')';
+      img.style.transformOrigin = '0 0';
+      img.style.maxWidth = 'none';
+      document.getElementById('live-wrapper').appendChild(img);
+    };
+    img.onerror = function() {
+      pane.innerHTML = '<div class="scan-line" id="scan-line" style="display:none"></div>' +
+        '<div class="pane-empty"><div class="big">&#128247;</div>' +
+        '<div>No screenshot for ' + escapeHtml(compName) + '</div>' +
+        '<div style="font-size:9px;color:var(--muted)">Run the render pipeline to capture screenshots</div></div>';
+    };
+    img.src = '/api/screenshot/' + encodeURIComponent(compName) + '?t=' + Date.now();
+  } else if (liveView === 'diff') {
+    // Show pixel diff image
+    var diffImg = new Image();
+    diffImg.onload = function() {
+      var imgW = diffImg.naturalWidth, imgH = diffImg.naturalHeight;
+      var sW = Math.round(imgW * scale), sH = Math.round(imgH * scale);
+      pane.innerHTML = '<div class="scan-line" id="scan-line"></div>' +
+        '<div id="live-wrapper" style="width:' + sW + 'px;height:' + sH + 'px;overflow:hidden;flex-shrink:0;"></div>';
+      diffImg.id = 'live-screenshot';
+      diffImg.style.transform = 'scale(' + scale + ')';
+      diffImg.style.transformOrigin = '0 0';
+      diffImg.style.maxWidth = 'none';
+      document.getElementById('live-wrapper').appendChild(diffImg);
+    };
+    diffImg.onerror = function() {
+      pane.innerHTML = '<div class="scan-line" id="scan-line" style="display:none"></div>' +
+        '<div class="pane-empty"><div class="big">&#128308;</div>' +
+        '<div>No diff for ' + escapeHtml(compName) + '</div>' +
+        '<div style="font-size:9px;color:var(--muted)">Upload a baseline and run the render pipeline to generate diffs</div></div>';
+    };
+    diffImg.src = '/api/diff/' + encodeURIComponent(compName) + '?t=' + Date.now();
+  } else {
+    // Live iframe mode — wrap in a sized container so flex centering works with scale
+    var exportN = (comp.exports && comp.exports.length > 0) ? comp.exports[0] : 'default';
+    var harnessUrl = '/harness?component=' + encodeURIComponent(comp.file) + '&export=' + encodeURIComponent(exportN);
+    var scaledW = Math.round(viewport.w * scale);
+    var scaledH = Math.round(viewport.h * scale);
+    pane.innerHTML = '<div class="scan-line" id="scan-line"></div>' +
+      '<div id="live-wrapper" style="width:' + scaledW + 'px;height:' + scaledH + 'px;overflow:hidden;flex-shrink:0;">' +
+      '<iframe id="live-iframe" src="' + harnessUrl + '" title="Live render of ' + escapeHtml(exportName(comp)) + '"' +
+      ' style="width:' + viewport.w + 'px;height:' + viewport.h + 'px;transform:scale(' + scale + ');transform-origin:0 0;"></iframe></div>';
+  }
 
   // Show scan briefly
   var sl = document.getElementById('scan-line');
@@ -781,16 +886,35 @@ function applyZoom(paneId) {
   var scale = zoomLevels[paneId] / 100;
   if (paneId === 'live') {
     var iframe = document.getElementById('live-iframe');
+    var wrapper = document.getElementById('live-wrapper');
     if (iframe) {
       iframe.style.transform = 'scale(' + scale + ')';
       iframe.style.width = viewport.w + 'px';
       iframe.style.height = viewport.h + 'px';
     }
+    var liveImg = document.getElementById('live-screenshot');
+    if (liveImg) {
+      liveImg.style.transform = 'scale(' + scale + ')';
+      liveImg.style.transformOrigin = '0 0';
+      // Resize wrapper to match scaled image dimensions
+      var natW = liveImg.naturalWidth || viewport.w;
+      var natH = liveImg.naturalHeight || viewport.h;
+      if (wrapper) {
+        wrapper.style.width = Math.round(natW * scale) + 'px';
+        wrapper.style.height = Math.round(natH * scale) + 'px';
+      }
+    }
+    if (wrapper && iframe) {
+      wrapper.style.width = Math.round(viewport.w * scale) + 'px';
+      wrapper.style.height = Math.round(viewport.h * scale) + 'px';
+    }
   }
-  var img = document.querySelector('#figma-pane img');
-  if (img && paneId === 'figma') {
-    img.style.transform = 'scale(' + scale + ')';
-    img.style.transformOrigin = '0 0';
+  if (paneId === 'figma') {
+    var img = document.querySelector('#figma-pane img');
+    if (img) {
+      img.style.transform = 'scale(' + scale + ')';
+      img.style.transformOrigin = '0 0';
+    }
   }
 }
 
@@ -851,14 +975,162 @@ document.addEventListener('touchmove', function(e) {
 document.addEventListener('touchend', function() { pinchState = {}; }, { passive: true });
 
 // ---- FIGMA PANE (placeholder for now, shows screenshot if available) ----
-function renderFigmaPane(comp) {
-  var pane = document.getElementById('figma-pane');
-  // Future: fetch Figma screenshot from /api/screenshots/<component>
-  // For now show placeholder
-  pane.innerHTML = '<div class="pane-empty"><div class="big">&#127912;</div>' +
-    '<div>No Figma screenshot available</div>' +
-    '<div style="font-size:9px;color:var(--muted)">Configure Figma API tokens to fetch design baselines</div></div>';
+// ---- FIGMA SOURCE TOGGLE ----
+var figmaSource = 'upload'; // 'upload' or 'mcp'
+var liveView = 'live'; // 'live', 'screenshot', or 'diff'
+
+function setFigmaSource(mode) {
+  figmaSource = mode;
+  var btns = document.querySelectorAll('#figma-source-toggle .source-toggle-btn');
+  btns.forEach(function(b) { b.classList.toggle('active', b.textContent.toLowerCase() === mode); });
+  renderFigmaPane();
 }
+
+function setLiveView(mode) {
+  liveView = mode;
+  var btns = document.querySelectorAll('#live-view-toggle .view-toggle-btn');
+  btns.forEach(function(b) { b.classList.toggle('active', b.textContent.toLowerCase() === mode); });
+  if (selectedFile) {
+    var comp = components.find(function(c) { return c.file === selectedFile; });
+    if (comp) renderLivePane(comp);
+  }
+}
+
+function renderFigmaPane() {
+  var pane = document.getElementById('figma-pane');
+  if (!selectedFile) {
+    showFigmaUploadArea(pane);
+    return;
+  }
+  var compName = deriveComponentName(selectedFile);
+
+  if (figmaSource === 'mcp') {
+    // MCP mode: try to load baseline from API
+    var img = new Image();
+    img.onload = function() {
+      var scale = zoomLevels.figma / 100;
+      pane.innerHTML = '';
+      img.style.transform = 'scale(' + scale + ')';
+      img.style.transformOrigin = '0 0';
+      img.style.maxWidth = 'none';
+      pane.appendChild(img);
+      document.getElementById('figma-badge').textContent = 'MCP';
+      document.getElementById('figma-badge').className = 'diff-badge diff-pass';
+    };
+    img.onerror = function() {
+      pane.innerHTML = '<div class="pane-empty"><div class="big">&#128279;</div>' +
+        '<div>No MCP baseline for ' + escapeHtml(compName) + '</div>' +
+        '<div style="font-size:9px;color:var(--muted)">Configure figma.nodeIds in .pixelproofrc to fetch from Figma</div></div>';
+      document.getElementById('figma-badge').textContent = 'NO DATA';
+      document.getElementById('figma-badge').className = 'diff-badge diff-warn';
+    };
+    img.src = '/api/baseline/' + encodeURIComponent(compName) + '?t=' + Date.now();
+  } else {
+    // Upload mode: check if baseline exists, else show upload area
+    var img2 = new Image();
+    img2.onload = function() {
+      var scale = zoomLevels.figma / 100;
+      pane.innerHTML = '';
+      img2.style.transform = 'scale(' + scale + ')';
+      img2.style.transformOrigin = '0 0';
+      img2.style.maxWidth = 'none';
+      img2.style.cursor = 'pointer';
+      img2.title = 'Click to replace';
+      img2.onclick = function() { document.getElementById('figma-file-input').click(); };
+      pane.appendChild(img2);
+      // Add a small re-upload button
+      var reupload = document.createElement('div');
+      reupload.style.cssText = 'position:absolute;bottom:8px;right:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:3px 8px;font-size:9px;color:var(--muted2);cursor:pointer;z-index:2;';
+      reupload.textContent = 'Replace';
+      reupload.onclick = function() { document.getElementById('figma-file-input').click(); };
+      pane.appendChild(reupload);
+      // Keep the hidden file input
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.id = 'figma-file-input'; inp.accept = 'image/*'; inp.style.display = 'none';
+      inp.onchange = function() { handleFigmaUpload(inp); };
+      pane.appendChild(inp);
+      document.getElementById('figma-badge').textContent = 'UPLOADED';
+      document.getElementById('figma-badge').className = 'diff-badge diff-pass';
+    };
+    img2.onerror = function() {
+      showFigmaUploadArea(pane);
+      document.getElementById('figma-badge').textContent = 'BASELINE';
+      document.getElementById('figma-badge').className = 'diff-badge diff-warn';
+    };
+    img2.src = '/api/baseline/' + encodeURIComponent(compName) + '?t=' + Date.now();
+  }
+}
+
+function showFigmaUploadArea(pane) {
+  pane.innerHTML = '<div class="upload-area" id="figma-upload" onclick="document.getElementById(\\'figma-file-input\\').click()">' +
+    '<input type="file" id="figma-file-input" accept="image/*" onchange="handleFigmaUpload(this)" style="display:none">' +
+    '<div class="big">&#128247;</div>' +
+    '<div>Drop or click to upload Figma screenshot</div>' +
+    '<div style="font-size:9px;color:var(--muted)">PNG, JPG &mdash; or paste from clipboard with Ctrl+V</div></div>';
+}
+
+function handleFigmaUpload(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  if (!selectedFile) { addLog('[UI]', 'Select a component first', 'warn'); return; }
+  uploadBaselineFile(file);
+}
+
+function uploadBaselineFile(file) {
+  var compName = deriveComponentName(selectedFile);
+  var reader = new FileReader();
+  reader.onload = function() {
+    var arrayBuf = reader.result;
+    fetch('/api/baseline/' + encodeURIComponent(compName), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: arrayBuf
+    }).then(function(res) { return res.json(); }).then(function() {
+      addLog('[FIGMA]', 'Uploaded baseline for ' + compName, 'success');
+      renderFigmaPane();
+    }).catch(function(err) {
+      addLog('[FIGMA]', 'Upload failed: ' + err.message, 'err');
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function deriveComponentName(file) {
+  var parts = file.replace(/\\\\/g, '/').split('/');
+  var base = parts[parts.length - 1];
+  return base.replace(/\\.(tsx?|jsx?)$/, '');
+}
+
+// ---- CLIPBOARD PASTE (Ctrl+V) ----
+document.addEventListener('paste', function(e) {
+  if (!selectedFile) return;
+  var items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      e.preventDefault();
+      var blob = items[i].getAsFile();
+      if (blob) uploadBaselineFile(blob);
+      return;
+    }
+  }
+});
+
+// ---- DRAG & DROP on Figma pane ----
+document.addEventListener('dragover', function(e) {
+  var paneId = identifyPane(e.target);
+  if (paneId === 'figma') { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+});
+document.addEventListener('drop', function(e) {
+  var paneId = identifyPane(e.target);
+  if (paneId !== 'figma') return;
+  e.preventDefault();
+  if (!selectedFile) { addLog('[UI]', 'Select a component first', 'warn'); return; }
+  var file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file && file.type.indexOf('image') !== -1) {
+    uploadBaselineFile(file);
+  }
+});
 
 // ---- VIOLATIONS BAR ----
 function renderViolationsBar(comp) {

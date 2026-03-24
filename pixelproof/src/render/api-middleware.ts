@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, normalize, isAbsolute } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -177,6 +177,34 @@ function handleTokens(
 }
 
 /**
+ * Handle POST /api/baseline/:component — upload a baseline PNG.
+ */
+function handleBaselineUpload(
+  req: IncomingMessage,
+  res: ServerResponse,
+  component: string,
+  options: ApiMiddlewareOptions,
+): void {
+  const chunks: Buffer[] = [];
+  req.on('data', (chunk: Buffer) => chunks.push(chunk));
+  req.on('end', () => {
+    const body = Buffer.concat(chunks);
+    if (body.length === 0) {
+      sendText(res, 400, 'Empty body');
+      return;
+    }
+    const baselinesDir = resolve(options.pixelproofDir, 'baselines');
+    mkdirSync(baselinesDir, { recursive: true });
+    const filePath = resolve(baselinesDir, `${component}.png`);
+    writeFileSync(filePath, body);
+    sendJson(res, 200, { ok: true, path: filePath });
+  });
+  req.on('error', () => {
+    sendText(res, 500, 'Upload failed');
+  });
+}
+
+/**
  * Create API middleware handler for the Vite dev server.
  * Returns a Connect-compatible middleware function.
  */
@@ -189,8 +217,22 @@ export function createApiMiddleware(
     // Handle CORS preflight
     if (req.method === 'OPTIONS' && url.startsWith('/api/')) {
       setCorsHeaders(res);
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       res.writeHead(204);
       res.end();
+      return;
+    }
+
+    const { pathname } = parseUrl(url);
+
+    // POST endpoints
+    if (req.method === 'POST') {
+      const baselineUpload = pathname.match(/^\/api\/baseline\/([^/]+)$/);
+      if (baselineUpload) {
+        handleBaselineUpload(req, res, baselineUpload[1], options);
+        return;
+      }
+      next();
       return;
     }
 
@@ -198,8 +240,6 @@ export function createApiMiddleware(
       next();
       return;
     }
-
-    const { pathname } = parseUrl(url);
 
     if (pathname === '/api/source') {
       handleSource(req, res, options);
