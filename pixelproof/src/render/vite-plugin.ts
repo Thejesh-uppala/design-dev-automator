@@ -1,6 +1,8 @@
 import type { Plugin } from 'vite';
 import type { PixelProofConfig } from '../config/schema.js';
 import type { ProviderConfig } from './provider-detector.js';
+import { createApiMiddleware } from './api-middleware.js';
+import { resolve } from 'node:path';
 
 const VIRTUAL_MODULE_ID = 'virtual:pixelproof-harness';
 const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID;
@@ -8,6 +10,7 @@ const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID;
 export interface PixelProofPluginOptions {
   config: PixelProofConfig;
   providers?: ProviderConfig[];
+  rootDir?: string;
 }
 
 /**
@@ -261,6 +264,15 @@ export function pixelproofPlugin(options: PixelProofPluginOptions): Plugin {
         next();
       });
 
+      // Pre-middleware: API endpoints (must run before Vite's internal middleware)
+      if (options.rootDir) {
+        const pixelproofDir = resolve(options.rootDir, '.pixelproof');
+        server.middlewares.use(createApiMiddleware({
+          rootDir: options.rootDir,
+          pixelproofDir,
+        }));
+      }
+
       // Post-middleware: serve harness HTML through Vite's transform pipeline
       // (harness needs React refresh preamble for virtual module)
       return () => {
@@ -447,6 +459,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 .upload-area:hover { border-color:var(--accent); color:var(--text); background:rgba(245,166,35,0.03); }
 .upload-area .big { font-size:28px; opacity:0.4; }
 .upload-area input { display:none; }
+/* Toast notification */
+.toast { position:fixed; top:24px; left:50%; transform:translateX(-50%); background:var(--bg2); color:var(--text); border:1px solid var(--border2); border-radius:8px; padding:10px 20px; font-size:12px; font-family:var(--mono); z-index:9999; box-shadow:0 4px 16px rgba(0,0,0,0.3); opacity:0; transition:opacity 0.2s; pointer-events:none; }
+.toast.visible { opacity:1; }
+.toast.toast-warn { border-color:var(--accent); background:rgba(245,166,35,0.1); }
+.toast.toast-err { border-color:var(--red); background:rgba(231,76,60,0.1); }
+.toast.toast-success { border-color:var(--green); background:rgba(39,174,96,0.1); }
 /* Live pane view toggle */
 .view-toggle { display:flex; border:1px solid var(--border2); border-radius:3px; overflow:hidden; }
 .view-toggle-btn { background:var(--bg3); color:var(--muted2); font-size:9px; padding:2px 6px; border:none; cursor:pointer; font-family:var(--font-mono); transition:all 0.1s; }
@@ -530,6 +548,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
 </style>
 </head>
 <body>
+<div class="toast" id="toast"></div>
 
 <!-- TOP BAR -->
 <div class="topbar" id="topbar">
@@ -630,6 +649,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-mono); fo
                 <option value="1280x800" selected>Desktop 1280</option>
                 <option value="1440x900">Desktop 1440</option>
               </select>
+              <button class="zoom-btn" id="rerender-btn" onclick="requestRerender()" title="Re-capture screenshot" style="font-size:9px;width:56px;background:var(--accent);color:#fff;border-color:var(--accent);">Render</button>
               <span class="diff-badge" id="diff-badge" style="display:none"></span>
             </div>
           </div>
@@ -720,6 +740,15 @@ function exportName(c) {
   return c.exports[0] === 'default' ? shortFile(c.file) : c.exports[0];
 }
 function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+var toastTimer = null;
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast visible' + (type ? ' toast-' + type : '');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.className = 'toast'; toastTimer = null; }, 3500);
+}
 
 // ---- RENDER SIDEBAR ----
 function renderSidebar() {
@@ -983,6 +1012,9 @@ function setFigmaSource(mode) {
   figmaSource = mode;
   var btns = document.querySelectorAll('#figma-source-toggle .source-toggle-btn');
   btns.forEach(function(b) { b.classList.toggle('active', b.textContent.toLowerCase() === mode); });
+  if (mode === 'mcp') {
+    showToast('Figma MCP server is not connected. Configure figma.nodeIds in .pixelproofrc and ensure the MCP server is running.', 'warn');
+  }
   renderFigmaPane();
 }
 
@@ -1087,9 +1119,11 @@ function uploadBaselineFile(file) {
       body: arrayBuf
     }).then(function(res) { return res.json(); }).then(function() {
       addLog('[FIGMA]', 'Uploaded baseline for ' + compName, 'success');
+      showToast('Baseline uploaded for ' + compName, 'success');
       renderFigmaPane();
     }).catch(function(err) {
       addLog('[FIGMA]', 'Upload failed: ' + err.message, 'err');
+      showToast('Upload failed: ' + err.message, 'err');
     });
   };
   reader.readAsArrayBuffer(file);
@@ -1225,6 +1259,16 @@ function addLog(agent, msg, cls) {
 }
 
 // ---- WEBSOCKET ----
+function requestRerender() {
+  if (!selectedFile) { showToast('Select a component first', 'warn'); return; }
+  if (!ws || ws.readyState !== WebSocket.OPEN) { showToast('Not connected to server', 'err'); return; }
+  var comp = components.find(function(c) { return c.file === selectedFile; });
+  var exportN = (comp && comp.exports && comp.exports.length > 0) ? comp.exports[0] : 'default';
+  ws.send(JSON.stringify({ type: 'render-request', data: { component: selectedFile, export: exportN } }));
+  showToast('Rendering ' + deriveComponentName(selectedFile) + '...', 'success');
+  addLog('[RENDER]', 'Requested re-render for ' + shortFile(selectedFile), 'highlight');
+}
+
 function connect() {
   var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   ws = new WebSocket(proto + '//' + location.host + '/__pixelproof_ws');

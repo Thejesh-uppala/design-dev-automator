@@ -6,7 +6,7 @@
  */
 
 import { resolve, basename } from 'node:path';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import type { PixelProofConfig } from '../config/schema.js';
 import type { ScoreStore } from '../scoring/store.js';
 import { isChromiumInstalled } from './playwright-setup.js';
@@ -55,10 +55,20 @@ export async function renderPipeline(
     return result;
   }
 
-  const nodeIds = config.figma?.nodeIds ?? {};
-
-  // Fetch baseline images
+  // Fetch baseline images from Figma API (for components mapped in nodeIds)
   const baselines = await fetchReferenceImages(config, rootDir);
+
+  // Also pick up manually uploaded baselines from .pixelproof/baselines/
+  const baselinesDir = resolve(rootDir, '.pixelproof', 'baselines');
+  for (const comp of scoreStore.getAllComponents()) {
+    const componentName = deriveComponentName(comp.file);
+    if (!baselines.has(componentName)) {
+      const manualPath = resolve(baselinesDir, `${componentName}.png`);
+      if (existsSync(manualPath)) {
+        baselines.set(componentName, manualPath);
+      }
+    }
+  }
 
   // Ensure screenshots dir exists
   const screenshotsDir = resolve(rootDir, '.pixelproof', 'screenshots');
@@ -70,27 +80,10 @@ export async function renderPipeline(
 
   try {
     for (const comp of scoreStore.getAllComponents()) {
-      // Derive component name from file path
       const componentName = deriveComponentName(comp.file);
 
-      if (!nodeIds[componentName]) {
-        scoreStore.setRenderFidelity(comp.file, null, 'skipped');
-        result.skipped++;
-        continue;
-      }
-
-      const baselinePath = baselines.get(componentName);
-      if (!baselinePath) {
-        console.warn(
-          `No baseline image for ${componentName} — skipping render fidelity.`,
-        );
-        scoreStore.setRenderFidelity(comp.file, null, 'skipped');
-        result.skipped++;
-        continue;
-      }
-
-      // Capture screenshot
-      const exportName = comp.exports[0] ?? componentName;
+      // Capture screenshot for every component (not just ones in nodeIds)
+      const exportName = comp.exports[0] ?? 'default';
       const screenshotPath = resolve(screenshotsDir, `${componentName}.png`);
 
       const screenshot = await runner.captureScreenshot(
@@ -110,24 +103,29 @@ export async function renderPipeline(
         continue;
       }
 
-      // Pixel diff
-      const diffPath = resolve(
-        screenshotsDir,
-        `${componentName}.diff.png`,
-      );
-      const diffResult = diffImages(
-        screenshotPath,
-        baselinePath,
-        diffPath,
-        config.render.tolerance,
-      );
+      // If baseline exists (from Figma API or manual upload), run pixel diff
+      const baselinePath = baselines.get(componentName);
+      if (baselinePath) {
+        const diffPath = resolve(
+          screenshotsDir,
+          `${componentName}.diff.png`,
+        );
+        const diffResult = diffImages(
+          screenshotPath,
+          baselinePath,
+          diffPath,
+          config.render.tolerance,
+        );
 
-      // Calculate and store score
-      const score = calculateRenderFidelity(
-        diffResult.totalPixels,
-        diffResult.differentPixels,
-      );
-      scoreStore.setRenderFidelity(comp.file, score, 'rendered');
+        const score = calculateRenderFidelity(
+          diffResult.totalPixels,
+          diffResult.differentPixels,
+        );
+        scoreStore.setRenderFidelity(comp.file, score, 'rendered');
+      } else {
+        // Screenshot captured but no baseline to diff against
+        scoreStore.setRenderFidelity(comp.file, null, 'rendered');
+      }
       result.rendered++;
     }
   } finally {
@@ -150,21 +148,12 @@ export async function renderSingleComponent(
   baselines: Map<string, string>,
 ): Promise<void> {
   const componentName = deriveComponentName(file);
-  const nodeIds = config.figma?.nodeIds ?? {};
-
-  if (!nodeIds[componentName]) {
-    return; // Not mapped — skip
-  }
-
-  const baselinePath = baselines.get(componentName);
-  if (!baselinePath) {
-    return;
-  }
 
   const screenshotsDir = resolve(rootDir, '.pixelproof', 'screenshots');
+  mkdirSync(screenshotsDir, { recursive: true });
   const screenshotPath = resolve(screenshotsDir, `${componentName}.png`);
   const comp = scoreStore.getComponentScore(file);
-  const exportName = comp?.exports[0] ?? componentName;
+  const exportName = comp?.exports[0] ?? 'default';
 
   const screenshot = await runner.captureScreenshot(
     file,
@@ -179,23 +168,38 @@ export async function renderSingleComponent(
     return;
   }
 
-  const diffPath = resolve(screenshotsDir, `${componentName}.diff.png`);
-  const diffResult = diffImages(
-    screenshotPath,
-    baselinePath,
-    diffPath,
-    config.render.tolerance,
-  );
+  // Check for baseline: from Figma API map or manually uploaded
+  let baselinePath = baselines.get(componentName);
+  if (!baselinePath) {
+    const manualPath = resolve(rootDir, '.pixelproof', 'baselines', `${componentName}.png`);
+    if (existsSync(manualPath)) {
+      baselinePath = manualPath;
+    }
+  }
 
-  const score = calculateRenderFidelity(
-    diffResult.totalPixels,
-    diffResult.differentPixels,
-  );
-  scoreStore.setRenderFidelity(file, score, 'rendered');
+  if (baselinePath) {
+    const diffPath = resolve(screenshotsDir, `${componentName}.diff.png`);
+    const diffResult = diffImages(
+      screenshotPath,
+      baselinePath,
+      diffPath,
+      config.render.tolerance,
+    );
 
-  console.log(
-    `Rescanned + re-rendered ${componentName}. Render Fidelity: ${score}%`,
-  );
+    const score = calculateRenderFidelity(
+      diffResult.totalPixels,
+      diffResult.differentPixels,
+    );
+    scoreStore.setRenderFidelity(file, score, 'rendered');
+    console.log(
+      `Rescanned + re-rendered ${componentName}. Render Fidelity: ${score}%`,
+    );
+  } else {
+    scoreStore.setRenderFidelity(file, null, 'rendered');
+    console.log(
+      `Captured screenshot for ${componentName} (no baseline for diff).`,
+    );
+  }
 }
 
 /**

@@ -147,8 +147,8 @@ describe('renderPipeline', () => {
 
     const result = await renderPipeline(config, store, '/root', 3001);
 
-    expect(result.rendered).toBe(2);
-    expect(result.skipped).toBe(1); // Utils.ts not in nodeIds
+    expect(result.rendered).toBe(3); // All components get screenshots now
+    expect(result.skipped).toBe(0);
     expect(result.errors).toBe(0);
 
     expect(store.getComponentScore('src/Button.tsx')!.renderStatus).toBe(
@@ -158,7 +158,7 @@ describe('renderPipeline', () => {
       'rendered',
     );
     expect(store.getComponentScore('src/Utils.ts')!.renderStatus).toBe(
-      'skipped',
+      'rendered',
     );
   });
 
@@ -195,7 +195,7 @@ describe('renderPipeline', () => {
     warnSpy.mockRestore();
   });
 
-  it('skips component when baseline image is missing', async () => {
+  it('renders component without baseline (screenshot only, no diff)', async () => {
     const store = new ScoreStore();
     store.setViolations('src/Button.tsx', [], 10);
 
@@ -211,12 +211,13 @@ describe('renderPipeline', () => {
       },
     });
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = await renderPipeline(config, store, '/root', 3001);
 
-    expect(result.rendered).toBe(0);
-    expect(result.skipped).toBe(1);
-    warnSpy.mockRestore();
+    expect(result.rendered).toBe(1); // Screenshot captured even without baseline
+    expect(result.skipped).toBe(0);
+    // renderFidelity is null (no baseline to diff against) but status is 'rendered'
+    expect(store.getComponentScore('src/Button.tsx')!.renderStatus).toBe('rendered');
+    expect(store.getComponentScore('src/Button.tsx')!.renderFidelity).toBeNull();
   });
 
   it('calculates correct render fidelity score', async () => {

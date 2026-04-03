@@ -7,16 +7,16 @@
  */
 
 import { createServer as createViteServer } from 'vite';
-import { resolve } from 'node:path';
 import type { Server as HttpServer } from 'node:http';
 import type { PixelProofConfig } from '../config/schema.js';
 import type { ScoreStore } from '../scoring/store.js';
 import type { TokenMap } from '../tokens/types.js';
 import { pixelproofPlugin } from '../render/vite-plugin.js';
-import { createApiMiddleware } from '../render/api-middleware.js';
 import { ScoreWebSocketServer } from '../ipc/ws-server.js';
 import { detectProviders } from '../render/provider-detector.js';
-import { renderPipeline } from '../render/pipeline.js';
+import { renderPipeline, renderSingleComponent } from '../render/pipeline.js';
+import { isChromiumInstalled } from '../render/playwright-setup.js';
+import { PlaywrightRunner } from '../render/playwright-runner.js';
 
 export interface ServerOptions {
   rootDir: string;
@@ -28,7 +28,6 @@ export interface ServerOptions {
 export async function startServer(options: ServerOptions) {
   const { rootDir, config, scoreStore, tokenMap } = options;
   const port = config.dashboard.port;
-  const pixelproofDir = resolve(rootDir, '.pixelproof');
 
   // Detect providers
   const providers = detectProviders(rootDir);
@@ -44,16 +43,13 @@ export async function startServer(options: ServerOptions) {
       open: false,
     },
     plugins: [
-      pixelproofPlugin({ config, providers }),
+      pixelproofPlugin({ config, providers, rootDir }),
     ],
     optimizeDeps: {
       exclude: ['virtual:pixelproof-harness'],
     },
     logLevel: 'warn',
   });
-
-  // Mount API middleware before Vite's own middleware
-  vite.middlewares.use(createApiMiddleware({ rootDir, pixelproofDir }));
 
   // Start listening
   await vite.listen();
@@ -63,10 +59,36 @@ export async function startServer(options: ServerOptions) {
     throw new Error('Vite HTTP server not available');
   }
 
-  // Attach WebSocket server
+  // Create a render callback for on-demand re-rendering from the dashboard
+  let runner: PlaywrightRunner | null = null;
+  const baselines = new Map<string, string>();
+
+  const renderCallback = async (file: string, _exportName: string): Promise<void> => {
+    if (!(await isChromiumInstalled())) {
+      throw new Error('Chromium not installed. Run: npx pixelproof install');
+    }
+
+    if (!runner) {
+      runner = new PlaywrightRunner();
+      await runner.launch();
+    }
+
+    await renderSingleComponent(
+      file,
+      config,
+      scoreStore,
+      runner,
+      rootDir,
+      port,
+      baselines,
+    );
+  };
+
+  // Attach WebSocket server with render callback
   const wsServer = new ScoreWebSocketServer({
     server: httpServer,
     scoreStore,
+    renderCallback,
   });
 
   console.log(`\n  PixelProof dashboard: http://localhost:${port}/`);
@@ -83,6 +105,10 @@ export async function startServer(options: ServerOptions) {
     vite,
     wsServer,
     async close() {
+      if (runner) {
+        await runner.close();
+        runner = null;
+      }
       wsServer.close();
       await vite.close();
     },

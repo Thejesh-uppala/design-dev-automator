@@ -4,7 +4,12 @@
       "WebSearch",
       "Bash(npm install:*)",
       "Bash(npm run:*)",
-      "Read(//d/Projects/react-demo-app/pixelproof-test-app/**)"
+      "Read(//d/Projects/react-demo-app/pixelproof-test-app/**)",
+      "Bash(./node_modules/.bin/tsc)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Read(//d/Projects/**)",
+      "Read(//d/Projects/design-dev-automator/pixelproof/**)",
+      "Bash(node -e \"console.log\\(new Date\\(1774351998*1000\\).toISOString\\(\\)\\)\")"
     ]
   }
 }
